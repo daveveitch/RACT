@@ -63,6 +63,7 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
 #' @param K Vector of integers, and these integers represent the Ky-Fan(k) norms that are included.
 #'   E.g. K=c(1,5) means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norm.
 #' @return named vector of Ky-Fan(k) norms where names of each entry are values of k
+#' @noRd
 calc_ky_fan_k<-function(cov_cor_X_1,cov_cor_X_2,K){
   diff_mat = cov_cor_X_1-cov_cor_X_2
 
@@ -87,7 +88,16 @@ calc_ky_fan_k<-function(cov_cor_X_1,cov_cor_X_2,K){
 #' @param cov If cov=TRUE then K based off of pooled covariance, if cov=FALSE then based off of pooled correlation.
 #'
 #' @return vector of values c(1,...,K)
-#' @noRd
+#' @export
+#' @examples
+#' set.seed(1)
+#' n = 50
+#' p = 250
+#' a_1 = matrix(rnorm(p),ncol=1)
+#' X_1 = a_1%*%t(a_1)%*%matrix(rnorm(n*p),nrow=p,ncol=n)
+#' a_2 = matrix(rnorm(p),ncol=1)
+#' X_2 = a_2%*%t(a_2)%*%matrix(rnorm(n*p),nrow=p,ncol=n)
+#' K_calculate(X_1,X_2)
 K_calculate<-function(X_1,X_2,K_pct = 0.8,cov = TRUE){
 
   combined_X = cbind(X_1,X_2)
@@ -116,7 +126,15 @@ K_calculate<-function(X_1,X_2,K_pct = 0.8,cov = TRUE){
 test_fun<-function(){
   n = 50
   p = 250
-  cov_matrices = generate_covariance_matrix('(LowRank)',1,p,5)
+
+  set.seed(1)
+  a_1 = matrix(rnorm(p),ncol=1)
+  X_1 = a_1%*%t(a_1)%*%matrix(rnorm(n*p),nrow=p,ncol=n)
+
+  a_2 = matrix(rnorm(p),ncol=1)
+  X_2 = a_2%*%t(a_2)%*%matrix(rnorm(n*p),nrow=p,ncol=n)
+
+
   X_1 = x_matrix=t(MASS::mvrnorm(n=n,mu=rep(0,p),Sigm=cov_matrices[[1]]))
   X_2 = x_matrix=t(MASS::mvrnorm(n=n,mu=rep(0,p),Sigm=cov_matrices[[2]]))
   K = NULL
