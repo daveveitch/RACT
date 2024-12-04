@@ -87,6 +87,7 @@ calc_ky_fan_k<-function(cov_cor_X_1,cov_cor_X_2,K){
 #' @param cov If cov=TRUE then K based off of pooled covariance, if cov=FALSE then based off of pooled correlation.
 #'
 #' @return vector of values c(1,...,K)
+#' @noRd
 K_calculate<-function(X_1,X_2,K_pct = 0.8,cov = TRUE){
 
   combined_X = cbind(X_1,X_2)
