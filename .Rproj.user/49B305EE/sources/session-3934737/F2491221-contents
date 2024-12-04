@@ -30,7 +30,7 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
   }
 
   if(is.null(K)){
-
+    K = K_calculate(X_1,X_2, cov = cov)
   }
 
   observed_test_stats = calc_ky_fan_k(cov_cor_X_1,cov_cor_X_2,K)
@@ -110,7 +110,6 @@ K_calculate<-function(X_1,X_2,K_pct = 0.8,cov = TRUE){
 
   return(K)
 }
-
 
 # For testing
 test_fun<-function(){
