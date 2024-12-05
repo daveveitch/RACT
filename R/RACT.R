@@ -35,23 +35,64 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
 
   observed_test_stats = calc_ky_fan_k(cov_cor_X_1,cov_cor_X_2,K)
 
-  permutation_stat_matrix = calc_permutation_stat_matrix(cbind(X_1,X_2),
-                                                         ncol(X_1),
-                                                         ncol(X_2),
-                                                         K,n_perm,
-                                                         observed_test_stats,
-                                                         cov_cor=cov_cor)
+  # Create empty matrix of permutation statistics we will fill
+  permutation_stat_matrix = matrix(data=0,nrow=n_perm,ncol=length(observed_test_stats))
+  colnames(permutation_stat_matrix) = names(observed_test_stats)
 
-  permutation_p_value_matrix = calc_permutation_p_value_matrix(permutation_stat_matrix)
-  permutation_p_value_matrix = permutation_add_min_p_cols(permutation_p_value_matrix)
+  # Permute data and record test statistics using permuted data in permutation_stat_matrix
+  X_1_X_2 = cbind(X_1,X_2)
 
-  observed_p_values = calc_observed_p_values(observed_test_stats,permutation_stat_matrix)
-  observed_p_values = observed_add_min_p_cols(observed_p_values,
-                                              permutation_p_value_matrix)
+  set.seed(seed)
 
-  reject_matrix = (observed_p_values <= alpha)*1
+  for(j in 1:n_perm){
+    # Randomly permute the data
+    permuted_order = sample(1:ncol(X_1_X_2))
+    permuted_group_1 = X_1_X_2[,permuted_order[1:ncol(X_1)]]
+    permuted_group_2 = X_1_X_2[,permuted_order[(ncol(X_1)+1):(ncol(X_1)+ncol(X_2))]]
 
-  return(reject_matrix)
+    # Calculate test statistics for permuted data, and add to permutation_stat_matrix
+    if(cov == TRUE){
+      cov_cor_permuted_group_1 = cov(t(permuted_group_1))
+      cov_cor_permuted_group_2 = cov(t(permuted_group_2))
+    }else{
+      cov_cor_permuted_group_1 = cor(t(permuted_group_1))
+      cov_cor_permuted_group_2 = cor(t(permuted_group_2))
+    }
+
+    permuted_test_stat = calc_ky_fan_k(cov_cor_permuted_group_1,cov_cor_permuted_group_2,K)
+    permutation_stat_matrix[j,] = c(permuted_test_stat)
+  }
+
+  if(min_P == TRUE){
+    # Calculate p values for statistics in each permutation, and then take minimum p across these statistics to get
+    # permutation distribution of minimum p value. Note here we do not need to normalize the statistics since the same
+    # normalization is applied to every Ky-Fan(k) norm so this will not affect the p-value.
+    permutation_p_value_matrix = (n_perm-apply(permutation_stat_matrix,2,rank,ties.method='min')+1)/n_perm
+
+    # Calculate observed p values
+    observed_p_values = (colSums(t(t(permutation_stat_matrix)>=observed_test_stats))+1)/(n_perm+1)
+
+    # Add minimum p value column to permutation value matrix and calculate p-value of minimum p-value from observed data
+    permutation_min_p_values = apply(permutation_p_value_matrix,1,min)
+    observed_min_p_value = min(observed_p_values)
+    RACT_p_value = (sum(permutation_min_p_values <= observed_min_p_value) + 1)/(n_perm + 1)
+
+  }else{
+    # Normalize observed test statistics, and permutation test statistics by means and variances estimated via permutation
+    test_stat_means = apply(permutation_stat_matrix,2,mean)
+    test_stat_sd = apply(permutation_stat_matrix,2,sd)
+
+    normalized_observed_test_stats = (observed_test_stats - test_stat_means)/test_stat_sd
+    normalized_permutation_stat_matrix = sweep(permutation_stat_matrix,2,test_stat_means,'-')
+    normalized_permutation_stat_matrix = sweep(normalized_permutation_stat_matrix,2,test_stat_sd,'/')
+
+    # Calculate observed p values and RACT p value
+    observed_p_values = ((colSums(t(t(normalized_permutation_stat_matrix)>=normalized_observed_test_stats))+1)/(n_perm+1))
+    max_normalized_permutation_stats = apply(normalized_permutation_stat_matrix,1,max)
+    RACT_p_value = (sum(max_normalized_permutation_stats>=max(normalized_observed_test_stats))+1)/(n_perm+1)
+  }
+
+  return(list('RACT p value'=RACT_p_value, 'Individual Ky-Fan(k) p values'= observed_p_values))
 }
 
 #' Calculate Ky-Fan(k) norm
@@ -124,6 +165,7 @@ K_calculate<-function(X_1,X_2,K_pct = 0.8,cov = TRUE){
 
 # For testing
 test_fun<-function(){
+  # Reject
   n = 50
   p = 250
 
@@ -134,9 +176,22 @@ test_fun<-function(){
   a_2 = matrix(rnorm(p),ncol=1)
   X_2 = a_2%*%t(a_2)%*%matrix(rnorm(n*p),nrow=p,ncol=n)
 
-
-  X_1 = x_matrix=t(MASS::mvrnorm(n=n,mu=rep(0,p),Sigm=cov_matrices[[1]]))
-  X_2 = x_matrix=t(MASS::mvrnorm(n=n,mu=rep(0,p),Sigm=cov_matrices[[2]]))
   K = NULL
+
+  # Small reject
+  n = 50
+  p = 250
+  snr = .02
+
+  set.seed(1)
+  X_1 = matrix(rnorm(n*p),nrow=p,ncol=n)
+
+  cov_X_2 = diag(p)*(1-snr)+snr
+  svd_cov_X_2 = svd(cov_X_2)
+  A = svd_cov_X_2$u%*%diag(sqrt(svd_cov_X_2$d))%*%t(svd_cov_X_2$v)
+  X_2 = A%*%matrix(rnorm(n*p),nrow=p,ncol=n)
+
+  K = NULL
+
 }
 
