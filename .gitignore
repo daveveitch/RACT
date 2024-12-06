@@ -4,3 +4,4 @@
 *.Rbuildignore
 *.gitattributes
 *.gitignore
+**.Rproj.user

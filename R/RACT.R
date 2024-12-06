@@ -150,12 +150,12 @@ calc_ky_fan_k<-function(cov_cor_X_1,cov_cor_X_2,K){
 
 #' Calculate K
 #'
-#' @description This function takes in two covariance/correlation matrices, and calculates the Ky-Fan(k)
-#'   norm of their differences for k=1,...,K
+#' @description a helper function which calculates K (a vector representing the Ky-Fan(k) to include
+#'   in RACT) based on the pooled covariance or pooled correlation.
 #'
 #' @param X_1 p x n data matrix (p dimensions, n observations) for group 1
 #' @param X_2 p x n data matrix (p dimensions, n observations) for group 2
-#' @param K_pct 0 < K_pct <= 1, where K_pct determines how large K should be so that sum of top K singular values of pooled covariance/correlation at least
+#' @param K_pct 0 < K_pct <= 1, where K_pct determines how large maximum value in K should be so that sum of top K singular values of pooled covariance/correlation at least
 #'   K_pct of the sum of all singular values. Default set at 0.8.
 #' @param cov If cov=TRUE then K based off of pooled covariance, if cov=FALSE then based off of pooled correlation.
 #'
