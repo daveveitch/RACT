@@ -31,5 +31,14 @@ a list of length 2. 'adaptive_p_value' is the p-value associated with RACT's ada
 This function takes in two data matrices, and tests for the equality of covariance using rank-adaptive covariance testing.
 }
 \examples{
-X_1 =
+n = 50
+p = 250
+snr = .02
+set.seed(1)
+X_1 = matrix(rnorm(n*p),nrow=p,ncol=n)
+cov_X_2 = diag(p)*(1-snr)+snr
+svd_cov_X_2 = svd(cov_X_2)
+A = svd_cov_X_2$u\%*\%diag(sqrt(svd_cov_X_2$d))\%*\%t(svd_cov_X_2$v)
+X_2 = A\%*\%matrix(rnorm(n*p),nrow=p,ncol=n)
+RACT(X_1,X_2,n_perm=200,seed=1)
 }

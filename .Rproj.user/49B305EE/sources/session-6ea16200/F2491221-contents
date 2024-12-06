@@ -16,7 +16,17 @@
 #' @export
 #'
 #' @examples
-#' X_1 =
+#' n = 50
+#' p = 250
+#' snr = .02
+#' set.seed(1)
+#' X_1 = matrix(rnorm(n*p),nrow=p,ncol=n)
+#' cov_X_2 = diag(p)*(1-snr)+snr
+#' svd_cov_X_2 = svd(cov_X_2)
+#' A = svd_cov_X_2$u%*%diag(sqrt(svd_cov_X_2$d))%*%t(svd_cov_X_2$v)
+#' X_2 = A%*%matrix(rnorm(n*p),nrow=p,ncol=n)
+#' RACT(X_1,X_2,n_perm=200,seed=1)
+
 RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
 
   # Calculate covariance/correlation matrices for each group
@@ -214,5 +224,6 @@ test_fun<-function(){
 
   K = NULL
 
+  RACT(X_1,X_2,n_perm=200,seed=2)
 }
 

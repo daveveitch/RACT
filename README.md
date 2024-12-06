@@ -49,6 +49,8 @@ This package contains one main function `RACT()`, and one helper function `K_cal
 RACT_p_values = RACT(X_1,X_2,K=NULL,min_P=FALSE,cov=TRUE, batch=batch, mod=mod, distMat=distMat)
 ``` 
 
+---
+
 `K_calculate()` is a helper function which calculates $K$ (a vector representing the Ky-Fan($k$) to include in RACT) based on the pooled covariance or pooled correlation. The function takes the following arguments
 
 * `X_1`: a ($p x n_1$) data matrix, where p is the number of features and $n_1$ is the number of subjects in group 1.
