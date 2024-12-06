@@ -1,7 +1,0 @@
-*.Rproj
-*.RData
-*.Rhistory
-*.Rbuildignore
-*.gitattributes
-*.gitignore
-**.Rproj.user
