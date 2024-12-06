@@ -2,7 +2,7 @@
 % Please edit documentation in R/RACT.R
 \name{RACT}
 \alias{RACT}
-\title{RACT method}
+\title{RACT}
 \usage{
 RACT(X_1, X_2, n_perm = 1000, K = NULL, min_P = FALSE, cov = TRUE, seed = NULL)
 }
@@ -11,9 +11,11 @@ RACT(X_1, X_2, n_perm = 1000, K = NULL, min_P = FALSE, cov = TRUE, seed = NULL)
 
 \item{X_2}{p x n data matrix (p dimensions, n observations) for group 2}
 
+\item{n_perm}{number of permutations to use in the permutation procedure}
+
 \item{K}{If NULL, Ky-Fan(k) norms from 1 to K are included where K smallest integer such that sum of top K singular values of the pooled covariance
 are greater than 80% of the sum of all of the singular values. Otherwise this argument takes a vector of integers, and these integers represent the
-Ky-Fan(k) norms that are included. E.g. K=c(1,5) means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norm.}
+Ky-Fan(k) norms that are included. E.g. K=c(1,5) means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norms only.}
 
 \item{min_P}{Whether a minimum-P value statistic is used.}
 

@@ -4,9 +4,10 @@
 #'
 #' @param X_1 p x n data matrix (p dimensions, n observations) for group 1
 #' @param X_2 p x n data matrix (p dimensions, n observations) for group 2
+#' @param n_perm number of permutations to use in the permutation procedure
 #' @param K If NULL, Ky-Fan(k) norms from 1 to K are included where K smallest integer such that sum of top K singular values of the pooled covariance
 #'   are greater than 80% of the sum of all of the singular values. Otherwise this argument takes a vector of integers, and these integers represent the
-#'   Ky-Fan(k) norms that are included. E.g. K=c(1,5) means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norm.
+#'   Ky-Fan(k) norms that are included. E.g. K=c(1,5) means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norms only.
 #' @param min_P Whether a minimum-P value statistic is used.
 #' @param cov If cov=TRUE RACT tests for the equality of the covariance of X_1,X_2. If cov=FALSE RACT tests for the equality of the correlation of X_1,X_2.
 #' @param seed Allows user to set a seed for the permutation procedure.

@@ -2,8 +2,7 @@
 % Please edit documentation in R/RACT.R
 \name{K_calculate}
 \alias{K_calculate}
-\title{This function calculates the smallest K, such that the sum of the top K singular values of the covariance/correlation
-  matrix of the data is at least K_pct of the sum of all singular values.}
+\title{Calculate K}
 \usage{
 K_calculate(X_1, X_2, K_pct = 0.8, cov = TRUE)
 }
@@ -21,7 +20,8 @@ K_pct of the sum of all singular values. Default set at 0.8.}
 vector of values c(1,...,K)
 }
 \description{
-This function takes in two covariance/correlation matrices, and calculates the Ky-Fan(k) norm of their differences for k=1,...,K
+This function takes in two covariance/correlation matrices, and calculates the Ky-Fan(k)
+  norm of their differences for k=1,...,K
 }
 \examples{
 set.seed(1)
