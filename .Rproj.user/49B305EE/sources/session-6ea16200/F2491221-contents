@@ -1,4 +1,4 @@
-#' RACT method
+#' RACT
 #'
 #' @description This function takes in two data matrices, and tests for the equality of covariance using rank-adaptive covariance testing.
 #'
@@ -31,7 +31,24 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
 
   if(is.null(K)){
     K = K_calculate(X_1,X_2, cov = cov)
+  }else if(!all(K==floor(K))){
+    # Checks that all entries of K are integers
+    stop('K must be a vector of integers')
+  }else if(min(K)<=0){
+    stop('Each entry of K must be greater than or equal to 1')
+  }else if(max(K)>=nrow(cov_cor_X_1)){
+    stop('Each enry of K must be less than or equal to p')
   }
+
+
+  if(!is.null(seed)){
+    # save current seed, will return to this seed after permutations done
+    old_seed = .Random.seed
+    set.seed(seed)
+  }
+
+  # Ensure all entries of K unique
+  K = unique(K)
 
   observed_test_stats = calc_ky_fan_k(cov_cor_X_1,cov_cor_X_2,K)
 
@@ -42,13 +59,11 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
   # Permute data and record test statistics using permuted data in permutation_stat_matrix
   X_1_X_2 = cbind(X_1,X_2)
 
-  set.seed(seed)
-
   for(j in 1:n_perm){
     # Randomly permute the data
     permuted_order = sample(1:ncol(X_1_X_2))
     permuted_group_1 = X_1_X_2[,permuted_order[1:ncol(X_1)]]
-    permuted_group_2 = X_1_X_2[,permuted_order[(ncol(X_1)+1):(ncol(X_1)+ncol(X_2))]]
+    permuted_group_2 = X_1_X_2[,permuted_order[(ncol(X_1)+1):ncol(X_1_X_2)]]
 
     # Calculate test statistics for permuted data, and add to permutation_stat_matrix
     if(cov == TRUE){
@@ -76,9 +91,9 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
     permutation_min_p_values = apply(permutation_p_value_matrix,1,min)
     observed_min_p_value = min(observed_p_values)
     RACT_p_value = (sum(permutation_min_p_values <= observed_min_p_value) + 1)/(n_perm + 1)
-
   }else{
-    # Normalize observed test statistics, and permutation test statistics by means and variances estimated via permutation
+    # Below we take a max T approach. First normalize observed test statistics, and permutation test statistics
+    # by means and variances estimated via permutation
     test_stat_means = apply(permutation_stat_matrix,2,mean)
     test_stat_sd = apply(permutation_stat_matrix,2,sd)
 
@@ -92,10 +107,15 @@ RACT <- function(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE,seed=NULL){
     RACT_p_value = (sum(max_normalized_permutation_stats>=max(normalized_observed_test_stats))+1)/(n_perm+1)
   }
 
+  if(!is.null(seed)){
+    set.seed(old_seed)
+  }
+
+
   return(list('RACT p value'=RACT_p_value, 'Individual Ky-Fan(k) p values'= observed_p_values))
 }
 
-#' Calculate Ky-Fan(k) norm
+#' Calculate Ky-Fan(k) norms
 #'
 #' @description This function takes in two covariance/correlation matrices, and calculates the Ky-Fan(k) norm of their differences for k=1,...,K
 #'
@@ -117,10 +137,10 @@ calc_ky_fan_k<-function(cov_cor_X_1,cov_cor_X_2,K){
   return(ky_fan_k_norms)
 }
 
-#' This function calculates the smallest K, such that the sum of the top K singular values of the covariance/correlation
-#'   matrix of the data is at least K_pct of the sum of all singular values.
+#' Calculate K
 #'
-#' @description This function takes in two covariance/correlation matrices, and calculates the Ky-Fan(k) norm of their differences for k=1,...,K
+#' @description This function takes in two covariance/correlation matrices, and calculates the Ky-Fan(k)
+#'   norm of their differences for k=1,...,K
 #'
 #' @param X_1 p x n data matrix (p dimensions, n observations) for group 1
 #' @param X_2 p x n data matrix (p dimensions, n observations) for group 2
