@@ -1,0 +1,61 @@
+#### UNPACK ARGUMENTS FROM COMMAND LINE #### 
+e <- new.env()
+e$args <- (commandArgs(TRUE))
+attach(e, name='myvars')
+rm(list=ls())
+
+print('Args Passed')
+print(args)
+
+function_call=args[1]
+job_num=as.numeric(args[2])
+ncores=as.numeric(as.numeric(args[3]))
+total_nodes_to_use=as.numeric(args[4])
+compute_server=as.character(args[5])
+
+print(paste('function_call',function_call))
+print(paste('job_num',job_num))
+print(paste('ncores',ncores))
+print(paste('total_nodes_to_use',total_nodes_to_use))
+print(paste('compute_server',compute_server))
+
+#### LOAD PACKAGES ####
+library(RSpectra)
+library(foreach)
+library(doParallel)
+library(MASS)
+library(UTDtst)
+library(xtable)
+library(Matrix)
+
+#### DEFINE WORKING DIRECTORIES ####
+if(compute_server=='LOCAL'){
+  WORKING_DIR="C:/Users/davev/Documents/UofT/PhD/Research/Brain/BrainR/NewApplications"
+  SPINS_PROCESSED_DIR = WORKING_DIR
+  SPINS_ORIG_DIR = file.path(WORKING_DIR,'SPINSex')
+  RESULTS_DIR=paste(WORKING_DIR,'/results',sep='')
+  FIGURE_DIR=paste(WORKING_DIR,'/figures',sep='')
+} else if(compute_server=='NIAGARA'){
+  WORKING_DIR='/gpfs/fs0/scratch/j/junpark/dveitch/Brain/NewApplications'
+  RESULTS_DIR='/gpfs/fs0/scratch/j/junpark/dveitch/Brain/NewApplications/results'
+  FIGURE_DIR='/gpfs/fs0/scratch/j/junpark/dveitch/Brain/NewApplications/figures'
+  SPINS_PROCESSED_DIR = '/gpfs/fs0/project/j/junpark/dveitch/RACT'
+  SPINS_ORIG_DIR = '/gpfs/fs0/project/j/junpark/zha11024/RELIEF/SPINS_DTI'
+} else if(compute_server=='CEDAR'){
+  WORKING_DIR=''
+  RESULTS_DIR='' 
+  FIGURE_DIR=''
+} else if(compute_server=='CEDARLOGIN'){
+  WORKING_DIR=''
+  RESULTS_DIR=''
+  FIGURE_DIR=''
+} else if(compute_server=='MERCURY'){
+  WORKING_DIR='/u/veitch/Brain/NewApplications'
+  RESULTS_DIR=paste(WORKING_DIR,'/results',sep='')
+  FIGURE_DIR=paste(WORKING_DIR,'/figures',sep='')
+}
+
+#### RUN SIMULATION/ANALYSIS ####
+setwd(WORKING_DIR)
+source('NewAppsHelper.R')
+source('NewAppsExplore.R',local=TRUE)

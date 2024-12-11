@@ -1,0 +1,13 @@
+Package: RACT
+Type: Package
+Title: Rank-adaptive covariance testing with applications to genomics and neuroimaging
+Version: 0.1.0
+Authors@R: person("David", "Veitch", email = "david.veitch@mail.utoronto.ca",role = c("aut", "cre"))
+Maintainer: David Veitch <david.veitch@mail.utoronto.ca>
+Description: R package for two-sample covariance testing using rank-adaptive covariance testing method. Based off of the paper https://arxiv.org/abs/2309.10284.
+License: `use_mit_license()`
+Encoding: UTF-8
+LazyData: true
+Imports:
+    RSpectra
+RoxygenNote: 7.3.2

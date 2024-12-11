@@ -1,0 +1,179 @@
+#### UNPACK ARGUMENTS FROM COMMAND LINE ####
+e <- new.env()
+e$args <- (commandArgs(TRUE))
+attach(e, name='myvars')
+rm(list=ls())
+
+print('Args Passed')
+print(args)
+
+function_call=args[1]
+job_num=as.numeric(args[2])
+ncores=as.numeric(as.numeric(args[3]))
+total_nodes_to_use=as.numeric(args[4])
+compute_server=as.character(args[5])
+
+print(paste('function_call',function_call))
+print(paste('job_num',job_num))
+print(paste('ncores',ncores))
+print(paste('total_nodes_to_use',total_nodes_to_use))
+print(paste('compute_server',compute_server))
+
+#### LOAD PACKAGES ####
+library(RSpectra)
+library(foreach)
+library(doParallel)
+library(MASS)
+library(UTDtst)
+library(xtable)
+library(Matrix)
+
+#### DEFINE WORKING DIRECTORIES ####
+if(compute_server=='LOCAL'){
+  WORKING_DIR="C:/Users/davev/Documents/UofT/PhD/Research/Brain/BrainR/NewApplications"
+  RACT_DIR = "C:/Users/davev/Documents/UofT/PhD/Research/Brain/BrainR/RACT/R"
+  SPINS_PROCESSED_DIR = WORKING_DIR
+  SPINS_ORIG_DIR = file.path(WORKING_DIR,'SPINSex')
+  RESULTS_DIR='C:/Users/davev/Documents/UofT/PhD/Research/Brain/BrainR/RACT_test/results'
+  FIGURE_DIR=paste(WORKING_DIR,'/figures',sep='')
+} else if(compute_server=='NIAGARA'){
+  WORKING_DIR='/gpfs/fs0/scratch/j/junpark/dveitch/Brain/NewApplications'
+  RESULTS_DIR='/gpfs/fs0/scratch/j/junpark/dveitch/Brain/NewApplications/results'
+  FIGURE_DIR='/gpfs/fs0/scratch/j/junpark/dveitch/Brain/NewApplications/figures'
+  SPINS_PROCESSED_DIR = '/gpfs/fs0/project/j/junpark/dveitch/RACT'
+  SPINS_ORIG_DIR = '/gpfs/fs0/project/j/junpark/zha11024/RELIEF/SPINS_DTI'
+} else if(compute_server=='CEDAR'){
+  WORKING_DIR=''
+  RESULTS_DIR=''
+  FIGURE_DIR=''
+} else if(compute_server=='CEDARLOGIN'){
+  WORKING_DIR=''
+  RESULTS_DIR=''
+  FIGURE_DIR=''
+} else if(compute_server=='MERCURY'){
+  WORKING_DIR='/u/veitch/Brain/NewApplications'
+  RACT_DIR = '/u/veitch/Brain/RACT_test'
+  RESULTS_DIR=paste(RACT_DIR,'/results',sep='')
+  FIGURE_DIR=paste(WORKING_DIR,'/figures',sep='')
+}
+
+#### RUN SIMULATION/ANALYSIS ####
+setwd(RACT_DIR)
+source('RACT.R')
+setwd(WORKING_DIR)
+source('BrainHelperRevisions.R')
+source('NewAppsHelper.R')
+
+RACT_test_power<-function(job_num,RESULTS_DIR,WORKING_DIR,FIGURE_DIR,RACT_DIR){
+  function_name = 'RACT_test_power'
+
+  K=500
+  B=500
+  alpha=.05
+  max_k_pct=.80
+  k_compare = 50 # number of singular values to look at
+
+  experiment_df_1=expand.grid(n=50,p=250,snr=seq(0,.03,length.out=8),null_case=FALSE,
+                              cov_rank=2,cov_structure='(LowRank)',seed_init=1,cov=c(TRUE,FALSE),
+                              stringsAsFactors = FALSE)
+  experiment_df_2=expand.grid(n=50,p=250,snr=.03,null_case=TRUE,
+                              cov_rank=2,cov_structure='(LowRank)',seed_init=1,cov=c(TRUE,FALSE),
+                              stringsAsFactors = FALSE)
+
+  experiment_df=rbind(experiment_df_1,experiment_df_2)
+  experiment_df$initial_seed=(experiment_df$seed_init*100+experiment_df$cov_rank)*1000000
+  experiment_df$experiment_number=1:nrow(experiment_df)
+
+  experiment_df = setup_directory_and_experiment_df(experiment_df,job_num,RESULTS_DIR,function_name)
+
+  # Run experiments
+  for(x in 1:nrow(experiment_df)){
+    # Create variables from row of experiment_df
+    list2env(as.list(experiment_df[x,]), envir = .GlobalEnv)
+
+    setwd(WORKING_DIR)
+    Sys.setenv(OMP_NUM_THREADS = 1,MKL_NUM_THREADS=1,BLAS_NUM_THREADS=1,LAPACK_NUM_THREDS=1)
+    cl <- parallel::makeCluster(ncores,outfile="")
+    doParallel::registerDoParallel(cl)
+
+    experiment_results=foreach(i=1:K,
+                               .packages = c('MASS','RSpectra'),
+                               .export = colnames(experiment_df))%dopar%{
+                                 setwd(RACT_DIR)
+                                 source('RACT.R')
+                                 setwd(WORKING_DIR)
+                                 source('NewAppsHelper.R')
+                                 source('BrainHelperRevisions.R')
+
+
+                                 set.seed(initial_seed+i)
+
+                                 cov_mats=generate_covariance_matrix(cov_structure,snr,p,cov_rank)
+
+                                 if(null_case == TRUE){
+                                   cov_matrix_1 = cov_mats[[1]]
+                                   cov_matrix_2 = cov_mats[[1]]
+                                 }else{
+                                   cov_matrix_1=cov_mats[[1]]
+                                   cov_matrix_2=cov_mats[[2]]
+                                 }
+
+                                 first_half_n=round(n/2)
+                                 second_half_n=n-first_half_n
+
+                                 X_1=t(MASS::mvrnorm(n=first_half_n,mu=rep(0,p),Sigm=cov_matrix_1,tol=10))
+                                 X_2=t(MASS::mvrnorm(n=second_half_n,mu=rep(0,p),Sigm=cov_matrix_2,tol=10))
+
+                                 RACT_result_1 = RACT(X_1,X_2,n_perm = B, K = NULL,min_P=FALSE,cov=cov)
+                                 RACT_result_2 = RACT(X_1,X_2,n_perm = B, K = c(1,4,10,25),min_P=FALSE,cov=cov)
+                                 RACT_result_3 = RACT(X_1,X_2,n_perm = B, K = NULL,min_P=TRUE,cov=cov)
+                                 RACT_result_4 = RACT(X_1,X_2,n_perm = B, K = c(1,4,10,25),min_P=TRUE,cov=cov)
+
+                                 print(i)
+                                 print(Sys.time())
+
+                                 list(RACT_result_1,RACT_result_2,RACT_result_3,RACT_result_4)
+                               }
+
+    parallel::stopCluster(cl)
+
+    save_experiment_result_to_RDS(experiment_number,function_name,RESULTS_DIR,experiment_results)
+  }
+}
+
+RACT_test_power_check<-function(){
+  function_name = 'RACT_test_power'
+  setwd(file.path(RESULTS_DIR,function_name))
+
+  experiment_df = read.csv('experiment_df.csv')
+  experiment_result_list = list()
+
+  for(x in 1:nrow(experiment_df)){
+    filename = paste(function_name,'-',sprintf("%03d",x),'.RDS',sep='')
+    result = readRDS(filename)
+
+    result_list = list()
+    result_list[['RACT_p']] = sapply(result, function(x) x[[1]][['RACT p value']])
+    result_list[['Ky_Fan_p']] = sapply(result, function(x) x[[2]][['Individual Ky-Fan(k) p values']])
+    experiment_result_list[[x]] = result_list
+  }
+
+
+
+
+
+
+
+
+
+
+  RACT_p =
+
+}
+
+
+# RUN
+print(Sys.time())
+do.call(function_call,list(job_num,RESULTS_DIR,WORKING_DIR,FIGURE_DIR,RACT_DIR))
+print(Sys.time())
+
