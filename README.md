@@ -39,7 +39,7 @@ This package contains one main function `RACT()`, and one helper function `K_cal
 * `X_1`: a ($p$ x $n_1$) data matrix, where $p$ is the number of features and $n_1$ is the number of subjects in group 1.
 * `X_2`: a ($p$ x $n_2$) data matrix, where $p$ is the number of features and $n_2$ is the number of subjects in group 2.
 * `n_perm`: (optional, default is `n_perm=1000`) Number of permutations to use in the permutation procedure.
-* `K`: (optional, default is K=NULL) If NULL, Ky-Fan($k$) norms from 1 to $K$ are included where $K$ the smallest integer such that sum of top $K$ singular values of the pooled covariance are greater than 80% of the sum of all of the singular values. Otherwise this argument takes a vector of integers, and these integers represent the Ky-Fan(k) norms that are included. For example, `K=c(1,5)` means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norms only.
+* `K`: (optional, default is `K=NULL`) If `K=NULL`, Ky-Fan($k$) norms from 1 to $K$ are included where $K$ the smallest integer such that sum of top $K$ singular values of the pooled covariance are greater than 80% of the sum of all of the singular values. Otherwise this argument takes a vector of integers, and these integers represent the Ky-Fan(k) norms that are included. For example, `K=c(1,5)` means RACT is based on the Ky-Fan(1) and Ky-Fan(5) norms only.
 * `min_P`: (optional, default is `min_P=FALSE`) Whether a minimum $p$-value statistic is used.
 * `cov`: (optional, default is `cov=TRUE`) If `cov=TRUE` RACT tests for the equality of the covariance of `X_1`, `X_2`. If `cov=FALSE` RACT tests for the equality of the correlation of `X_1`, `X_2`.
 
