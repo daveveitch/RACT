@@ -46,7 +46,7 @@ This package contains one main function `RACT()`, and one helper function `K_cal
 `RACT()` will return a list with two entries, 'RACT p value' the p-value from the adaptive testing procedure, and 'Individual Ky-Fan(k) p values' the p-values from each individual Ky-Fan($k$) norm.
 
 ```R
-RACT_p_values = RACT(X_1,X_2,K=NULL,min_P=FALSE,cov=TRUE, batch=batch, mod=mod, distMat=distMat)
+RACT_p_values = RACT(X_1,X_2,n_perm=1000,K=NULL,min_P=FALSE,cov=TRUE)
 ``` 
 
 ---
